@@ -35,6 +35,13 @@ def stationLoad(cities):
 
     return df
 
+def dfToDict(df, key, values, valuesFromDF = True):
+    if valuesFromDF == True:
+        Dict = {key: group[values].values.tolist()
+                for key, group in df.groupby(key)}
+        return Dict
+
+
 def sfCrimeLoad(database):
     raise NotImplementedError
 
