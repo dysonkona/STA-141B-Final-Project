@@ -88,28 +88,4 @@ def inStationRadius(stations, crime, radius):
             rtrnDct[station] = dist
         
     return rtrnDct
-
-
-
-def haversine(stationCoords, crimeCoords):
-        # Coordinates in decimal degrees (e.g. 2.89078, 12.79797)
-        lon1, lat1 = stationCoords
-        lon2, lat2 = crimeCoords
-
-        R = 3958.8  # radius of Earth in miles
-        phi_1 = math.radians(lat1)
-        phi_2 = math.radians(lat2)
-
-        delta_phi = math.radians(lat2 - lat1)
-        delta_lambda = math.radians(lon2 - lon1)
-
-        sqrtNum = 1 - math.cos(delta_phi) + math.cos(phi_1) * math.cos(phi_2) * (1 - math.cos(delta_lambda))
-        distance2 = 2 * R * math.asin(math.sqrt(sqrtNum/2))
-
-        return distance2
-    
-
-dist2 = haversine([37.803768, -122.271450], [37.808350, -122.268602])
-
-print(dist2)
     
