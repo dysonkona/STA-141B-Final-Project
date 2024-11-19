@@ -64,7 +64,7 @@ def inStationRadius(stations, crime, radius):
     Takes dictionary for stations, Take crime (one row from database)
     Checks distance between crime and station using Haversine formula, returns
     '''
-    rtrnLst = []
+    rtrnDct = {}
     def haversine(stationCoords, crimeCoords):
         # Coordinates in decimal degrees (e.g. 2.89078, 12.79797)
         lon1, lat1 = stationCoords
@@ -85,9 +85,9 @@ def inStationRadius(stations, crime, radius):
     for station in city:
         dist = haversine(city[station], crime.loc[['gtfs_latitude', 'gtfs_longitude']].tolist())
         if dist <= radius:
-            rtrnLst.append((station, True, dist))
+            rtrnDct[station] = dist
         
-    return rtrnLst
+    return rtrnDct
 
 
 
