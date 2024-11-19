@@ -30,15 +30,26 @@ def stationLoad(cities):
         if station.get("city") in cities:
             sfstations.append(station)
 
-    df = pd.DataFrame(sfstations)[['name', 'city', 'gtfs_latitude', 'gtfs_longitude']].sort_values("city").reset_index()
+    df = pd.DataFrame(sfstations)[['city', 'name', 'gtfs_latitude', 'gtfs_longitude']].sort_values("city").reset_index()
     df.drop('index', axis = 1, inplace = True)
+    df['gtfs_latitude'] = df['gtfs_latitude'].astype(float)
+    df['gtfs_longitude'] = df['gtfs_longitude'].astype(float)
 
     return df
 
-def dfToDict(df, key, values, valuesFromDF = True):
-    if valuesFromDF == True:
-        Dict = {key: group[values].values.tolist()
+def dfToDict(df, key, values, groupby = None):
+    if groupby == None:
+        Dict = {key: group[values].iloc[0].tolist()
                 for key, group in df.groupby(key)}
+        return Dict
+    else:
+        Dict = {
+            group:{
+                key: group[values].iloc[0].tolist()
+                for key, group in colGroup.groupby(key)
+                }
+                for group, colGroup in df.groupby(groupby)
+            }
         return Dict
 
 
@@ -48,11 +59,12 @@ def sfCrimeLoad(database):
 def oakCrimeLoad(database):
     raise NotImplementedError
 
-def inStationRadius(stations, crimes, radius):
+def inStationRadius(stations, crime, radius):
     '''
-    Takes dataframe from dataLoad() for stations, Takes list of crime dataframes
+    Takes dictionary for stations, Take crime (one row from database)
     Checks distance between crime and station using Haversine formula, returns
     '''
+    rtrnLst = []
     def haversine(stationCoords, crimeCoords):
         # Coordinates in decimal degrees (e.g. 2.89078, 12.79797)
         lon1, lat1 = stationCoords
@@ -69,10 +81,13 @@ def inStationRadius(stations, crimes, radius):
         distance = 2 * R * math.asin(math.sqrt(sqrtNum/2))
 
         return distance
-    
-    for city in crimes:
+    city = stations[crime['city']]
+    for station in city:
+        dist = haversine(city[station], crime.loc[['gtfs_latitude', 'gtfs_longitude']].tolist())
+        if dist <= radius:
+            rtrnLst.append((station, True, dist))
         
-        raise NotImplementedError
+    return rtrnLst
 
 
 
