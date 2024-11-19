@@ -4,6 +4,7 @@ from json import loads
 import pandas as pd
 from datetime import datetime
 import time
+import math
 
 
 def stationLoad(cities):
@@ -34,33 +35,59 @@ def stationLoad(cities):
 
     return df
 
-def crimeRadius():
+def sfCrimeLoad(database):
     raise NotImplementedError
 
-def haversine(coord1: object, coord2: object):
-    import math
+def oakCrimeLoad(database):
+    raise NotImplementedError
 
-    # Coordinates in decimal degrees (e.g. 2.89078, 12.79797)
-    lon1, lat1 = coord1
-    lon2, lat2 = coord2
+def inStationRadius(stations, crimes, radius):
+    '''
+    Takes dataframe from dataLoad() for stations, Takes list of crime dataframes
+    Checks distance between crime and station using Haversine formula, returns
+    '''
+    def haversine(stationCoords, crimeCoords):
+        # Coordinates in decimal degrees (e.g. 2.89078, 12.79797)
+        lon1, lat1 = stationCoords
+        lon2, lat2 = crimeCoords
 
-    R = 6371000  # radius of Earth in meters
-    phi_1 = math.radians(lat1)
-    phi_2 = math.radians(lat2)
+        R = 3958.8  # radius of Earth in miles
+        phi_1 = math.radians(lat1)
+        phi_2 = math.radians(lat2)
 
-    delta_phi = math.radians(lat2 - lat1)
-    delta_lambda = math.radians(lon2 - lon1)
+        delta_phi = math.radians(lat2 - lat1)
+        delta_lambda = math.radians(lon2 - lon1)
 
-    a = math.sin(delta_phi / 2.0) ** 2 + math.cos(phi_1) * math.cos(phi_2) * math.sin(delta_lambda / 2.0) ** 2
+        sqrtNum = 1 - math.cos(delta_phi) + math.cos(phi_1) * math.cos(phi_2) * (1 - math.cos(delta_lambda))
+        distance = 2 * R * math.asin(math.sqrt(sqrtNum/2))
+
+        return distance
     
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-    meters = R * c  # output distance in meters
-    km = meters / 1000.0  # output distance in kilometers
-
-    meters = round(meters, 3)
-    km = round(km, 3)
+    for city in crimes:
+        
+        raise NotImplementedError
 
 
-    print(f"Distance: {meters} m")
+
+def haversine(stationCoords, crimeCoords):
+        # Coordinates in decimal degrees (e.g. 2.89078, 12.79797)
+        lon1, lat1 = stationCoords
+        lon2, lat2 = crimeCoords
+
+        R = 3958.8  # radius of Earth in miles
+        phi_1 = math.radians(lat1)
+        phi_2 = math.radians(lat2)
+
+        delta_phi = math.radians(lat2 - lat1)
+        delta_lambda = math.radians(lon2 - lon1)
+
+        sqrtNum = 1 - math.cos(delta_phi) + math.cos(phi_1) * math.cos(phi_2) * (1 - math.cos(delta_lambda))
+        distance2 = 2 * R * math.asin(math.sqrt(sqrtNum/2))
+
+        return distance2
+    
+
+dist2 = haversine([37.803768, -122.271450], [37.808350, -122.268602])
+
+print(dist2)
     
