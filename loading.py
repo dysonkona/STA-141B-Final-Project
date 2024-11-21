@@ -38,12 +38,12 @@ def stationLoad(cities):
 
     return df
 
-def loadCrime(city, user, password, coordinates, radius, startYear, limit, offset):
+def loadCrime(city, coordinates, radius, startYear, limit, offset, user, password):
     lat, long = coordinates
     meters = 1609.34 * radius
     if city == "SF":
         params = {
-            "$select":"incident_datetime, incident_category, latitude, longitude, point",
+            "$select":"incident_datetime, incident_category, point",
             "$limit":limit,
             "$offset":offset,
             "$where":f"incident_datetime >= '{startYear}-01-01T00:00:00.000' and within_circle(point, {lat}, {long}, {meters})",

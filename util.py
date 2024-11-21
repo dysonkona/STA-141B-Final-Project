@@ -25,6 +25,17 @@ def dfToDict(df, key, values, groupby = None):
 def toDF(input, inputType = list):
     raise NotImplementedError
 
+def Rename(df, columnNames):
+    df=df.rename(columns = columnNames)
+    return df
+
+def addColumnsJSON(data, newCols):
+    #Assumes dictionary for newCols
+    for record in data:
+        for key, value in newCols.items():
+            record[key] = value
+    return data
+
 def inStationRadius(stations, crime, radius):
     '''
     Takes dictionary for stations, Take crime (one row from database)
