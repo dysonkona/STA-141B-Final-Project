@@ -22,6 +22,8 @@ def dfToDict(df, key, values, groupby = None):
             }
         return Dict
 
+def toDF(input, inputType = list):
+    raise NotImplementedError
 
 def inStationRadius(stations, crime, radius):
     '''

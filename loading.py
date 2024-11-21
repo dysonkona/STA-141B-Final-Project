@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime
 import time
 import math
+import random
 
 
 def stationLoad(cities):
@@ -16,7 +17,7 @@ def stationLoad(cities):
     "json": "y"
     
     })  
-    time.sleep(2) #maybe use for loop if make mulitple requestst
+    time.sleep(random.uniform(2,5)) #maybe use for loop if make mulitple requestst
 
     if response.status_code == 200:
         data = response.json()  # Parse JSON response
@@ -37,14 +38,35 @@ def stationLoad(cities):
 
     return df
 
+def loadCrime(city, user, password, coordinates, radius, startYear, limit, offset):
+    lat, long = coordinates
+    meters = 1609.34 * radius
+    if city == "SF":
+        params = {
+            "$select":"incident_datetime, incident_category, latitude, longitude, point",
+            "$limit":limit,
+            "$offset":offset,
+            "$where":f"incident_datetime >= '{startYear}-01-01T00:00:00.000' and within_circle(point, {lat}, {long}, {meters})",
+            "$order":"incident_datetime"
+            
+        }
+        url = 'https://data.sfgov.org/resource/wg3w-h783.json'
 
-def sfCrimeLoad(database):
-    raise NotImplementedError
+    elif city == "OAK":
+        params = {
+            "$select":"crimetype, datetime, location",
+            "$limit":limit,
+            "$offset":offset,
+            "$where":f"datetime >= '{startYear}-01-01T00:00:00.000' and within_circle(location, {lat}, {long}, {meters})",
+            "$order":"datetime"
+        }
+        url = 'https://data.oaklandca.gov/resource/ppgh-7dqv.json'
 
-def oakCrimeLoad(database):
-    url = 'https://data.oaklandca.gov/resource/ppgh-7dqv.json'
-    secretKey = '1ef8dner8br348ez190z3z188a6pm1yluwh2wcj4xjjnlvupe'
-    key = '523e7ewewudxb1frvbmdftwdt'
-    raise NotImplementedError
-
+    response = requests.get(url, auth = (user, password), params = params)
+    time.sleep(random.uniform(2,5))
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print("Authentication failed:", response.status_code)
+        return None
     
