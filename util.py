@@ -5,6 +5,8 @@ import pandas as pd
 from datetime import datetime
 import time
 import math
+import nltk
+import functools
 
 
 def dfToDict(df, key, values, groupby = None):
@@ -52,7 +54,48 @@ def splitColumnsJSON(data, col, names, nestedSplit, split = False):
                     del record[col]
     return data
 
+def isViolent(data, col):
+    violentStopList = ['murder', 'voluntary manslaughter', 'mayhem', 'rape', 'sodomy', 'oral',
+                 'lewd', 'lascivious', 'robbery', 'arson', 'penetration', 'attempted murder',
+                 'kidnapping', 'assault', 'sexual', 'abuse', 'carjacking', 'extortion', 'threats']
+    try:
+        nltk.data.find('corpora/wordnet.zip')
+    except LookupError:
+        nltk.download('wordnet')
+    try:
+        nltk.data.find('corpora/omw-1.4.zip')
+    except LookupError:
+        nltk.download('omw-1.4')
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        nltk.download('punkt')
+    try:
+        nltk.data.find('taggers/averaged_perceptron_tagger')
+    except LookupError:
+        nltk.download('averaged_perceptron_tagger')
 
+    wnl = nltk.WordNetLemmatizer()
+    lemmatize = functools.lru_cache(maxsize = 300)(wnl.lemmatize)
+    for record in data:
+        info = record[col]
+        tokens = nltk.word_tokenize(info)
+        tags = nltk.pos_tag(tokens)
+        noun = [word for word, tag in tags if tag in ('NN', 'NNS', 'NNP', 'NNPS')]
+        if noun:
+            word = noun[-1]
+        else:
+            word = tokens[-1]
+
+        crime = lemmatize(word.lower())
+        record["isViolent"] = (crime in violentStopList)
+    return data
+
+
+
+
+
+#Deprecated
 def inStationRadius(stations, crime, radius):
     '''
     Takes dictionary for stations, Take crime (one row from database)
