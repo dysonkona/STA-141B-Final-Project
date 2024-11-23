@@ -25,16 +25,33 @@ def dfToDict(df, key, values, groupby = None):
 def toDF(input, inputType = list):
     raise NotImplementedError
 
+#DATA FRAME OPERATIONS
+
 def Rename(df, columnNames):
     df=df.rename(columns = columnNames)
     return df
 
+#These two are for internal use to take advantage of parallel processing, take json as input
 def addColumnsJSON(data, newCols):
     #Assumes dictionary for newCols
     for record in data:
         for key, value in newCols.items():
             record[key] = value
     return data
+
+def splitColumnsJSON(data, col, names, nestedSplit, split = False):
+    '''
+    Meta arguments - data, column to split, nested, nestedSplit, new names
+    '''
+    for record in data:
+        if col in record:
+            if split:
+                if isinstance(record[col], dict):
+                    for name, info in zip(names, record[col][nestedSplit]):
+                        record[name] = info
+                    del record[col]
+    return data
+
 
 def inStationRadius(stations, crime, radius):
     '''
