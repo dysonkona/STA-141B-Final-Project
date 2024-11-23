@@ -33,9 +33,11 @@ def Pagination(query, fetch_function, maxRecords, user, password):
         e = time.time()
         if maxRecords is not None and len(all_data) >= maxRecords:
             tp.append((e-s, len(page_data)))
+            print("time for batch:", str(tp))
             return all_data[:maxRecords], tp
         tp.append((e-s, len(page_data)))
         offset += limit
+        print("time for batch:", str(tp))
     return all_data, tp
 
 def parallelProcess(workers, function, params, task = 'load', 
