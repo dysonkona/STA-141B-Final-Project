@@ -54,7 +54,7 @@ def loadCrime(city, coordinates, radius, startYear, limit, offset, user, passwor
 
     elif city == "OAK":
         params = {
-            "$select":"crimetype, datetime, location",
+            "$select":"datetime, description, location",
             "$limit":limit,
             "$offset":offset,
             "$where":f"datetime >= '{startYear}-01-01T00:00:00.000' and within_circle(location, {lat}, {long}, {meters})",

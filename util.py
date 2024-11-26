@@ -7,6 +7,7 @@ import time
 import math
 import nltk
 import functools
+import re
 
 
 def dfToDict(df, key, values, groupby = None):
@@ -52,12 +53,17 @@ def splitColumnsJSON(data, col, names, nestedSplit, split = False):
                     for name, info in zip(names, record[col][nestedSplit]):
                         record[name] = info
                     del record[col]
+                elif isinstance(record[col], str):
+                    for name, info in zip(names, record[col].split(nestedSplit)):
+                        record[name] = info
+                    del record[col]
     return data
 
-def isViolent(data, col):
+def isViolent(data, col, city):
     violentStopList = ['murder', 'voluntary manslaughter', 'mayhem', 'rape', 'sodomy', 'oral',
                  'lewd', 'lascivious', 'robbery', 'arson', 'penetration', 'attempted murder',
-                 'kidnapping', 'assault', 'sexual', 'abuse', 'carjacking', 'extortion', 'threats']
+                 'kidnapping', 'assault', 'sexual', 'abuse', 'carjacking', 'extortion', 'threats',
+                 'violence', 'battery']
     try:
         nltk.data.find('corpora/wordnet.zip')
     except LookupError:
@@ -79,29 +85,35 @@ def isViolent(data, col):
     lemmatize = functools.lru_cache(maxsize = 300)(wnl.lemmatize)
     for record in data:
         info = record[col]
+        info = info.replace("-", " ")
         tokens = nltk.word_tokenize(info)
         tags = nltk.pos_tag(tokens)
         noun = [word for word, tag in tags if tag in ('NN', 'NNS', 'NNP', 'NNPS')]
         if noun:
-            word = noun[-1]
+            wordList = noun
         else:
-            word = tokens[-1]
+            wordList = tokens
 
-        crime = lemmatize(word.lower())
-        record["isViolent"] = (crime in violentStopList)
+        crime = [lemmatize(word.lower()) for word in wordList]
+        record["isViolent"] = ((True in [word in violentStopList for word in crime]))
+        if city == "OAK":
+            record[col] = " ".join(crime)
     return data
 
 
+def dayOrNight(data, col):
+    form = '%H:%M:%S.%f'
+    for record in data:
+        info = record[col]
+        times = info.split("T")[1]
+        times = datetime.strptime(times, form).time()
+        if (times >= datetime(1, 1, 1, 21, 0).time() and times <= datetime(1, 1, 1, 0, 0).time()) or (times > datetime(1, 1, 1, 0, 0).time() and times <= datetime(1, 1, 1, 3, 0).time()):
+            record["night"] = True
+        else:
+            record["night"] = False
+    return data
 
-
-
-#Deprecated
-def inStationRadius(stations, crime, radius):
-    '''
-    Takes dictionary for stations, Take crime (one row from database)
-    Checks distance between crime and station using Haversine formula, returns
-    '''
-    rtrnDct = {}
+def radius(data, city, station, dict):
     def haversine(stationCoords, crimeCoords):
         # Coordinates in decimal degrees (e.g. 2.89078, 12.79797)
         lon1, lat1 = stationCoords
@@ -118,11 +130,15 @@ def inStationRadius(stations, crime, radius):
         distance = 2 * R * math.asin(math.sqrt(sqrtNum/2))
 
         return distance
-    city = stations[crime['city']]
-    for station in city:
-        dist = haversine(city[station], crime.loc[['gtfs_latitude', 'gtfs_longitude']].tolist())
-        if dist <= radius:
-            rtrnDct[station] = dist
+    for record in data:
+        stationC = dict[city][station]
+        try:
+            crimeC = [record['latitude'], record['longitude']]
+        except:
+            record['distance'] = None
+            return data
+        record['distance'] = haversine(stationC, crimeC)
+    return data
         
-    return rtrnDct
+
     
