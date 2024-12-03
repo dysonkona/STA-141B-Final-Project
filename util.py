@@ -6,6 +6,7 @@ from datetime import datetime
 import time
 import math
 import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import functools
 import re
 
@@ -140,5 +141,25 @@ def radius(data, city, station, dict):
         record['distance'] = haversine(stationC, crimeC)
     return data
         
+def reviewStationDict(data, cityName, stationName):
+    data = {'city': cityName, 'station': stationName, 'reviews': data}
+    return data
 
-    
+
+def average_compound_score(reviews, sid):
+    """calculates the average compound sentiment score for a list of reviews."""
+    compound_scores = []
+    for sentence in reviews:
+        ss = sid.polarity_scores(sentence)
+        compound_scores.append(ss['compound'])
+    return sum(compound_scores) / len(compound_scores) if compound_scores else 0
+
+def getCompoundSentiment(data, col):
+    sid = SentimentIntensityAnalyzer()
+    try:
+        nltk.data.find('sentiment/vader_lexicon.zip')
+    except LookupError:
+        nltk.download('vader_lexicon')
+    data['overallSentiment'] = average_compound_score(data[col], sid)
+    del data[col]
+    return data
