@@ -58,7 +58,6 @@ def Pagination(task, query, fetch_function, maxRecords = None, user = None, pass
             if not page_data:  # Stop if no more data
                 break
             page_data = validateFill(page_data, query[0])
-            print(page_data)
             all_data.extend(page_data)
             e = time.time()
             if maxRecords is not None and len(all_data) >= maxRecords:
@@ -87,7 +86,6 @@ def Pagination(task, query, fetch_function, maxRecords = None, user = None, pass
             del visitList[0]
             e = time.time()
             tp.append((e-s, len(page_data)))
-    print("got da reviews")
     return all_data, tp
 
 
