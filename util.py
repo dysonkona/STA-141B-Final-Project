@@ -70,6 +70,10 @@ def isViolent(data, col, city):
     except LookupError:
         nltk.download('wordnet')
     try:
+        nltk.data.find('tokenizers/punkt-tab')
+    except LookupError:
+        nltk.download('punkt_tab')
+    try:
         nltk.data.find('corpora/omw-1.4.zip')
     except LookupError:
         nltk.download('omw-1.4')
