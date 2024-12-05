@@ -73,12 +73,10 @@ def Pagination(task, query, fetch_function, maxRecords = None, user = None, pass
         if query[1] == True:
             s= time.time()
             visitList = fetch_function(*query)
-            print("done with visit list!")
             query[1] = False
             e = time.time()
             tp.append((e-s, len(visitList)))
         while visitList: #or toVisit
-            print('review page done')
             s = time.time()
             query[0] = visitList[0]
             page_data = fetch_function(*query)
