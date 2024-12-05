@@ -4,6 +4,7 @@ import loading
 import time
 import pandas as pd
 import functools
+import random
 
 def subProcess(data, operations, metadata):
     for operation, args in zip(operations, metadata):
@@ -83,6 +84,7 @@ def Pagination(task, query, fetch_function, maxRecords = None, user = None, pass
             all_data.extend(page_data)
             del visitList[0]
             e = time.time()
+            time.sleep(random.uniform(3, 5))
             tp.append((e-s, len(page_data)))
     return all_data, tp
 

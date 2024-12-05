@@ -101,6 +101,25 @@ def isViolent(data, col, city):
             record[col] = " ".join(crime)
     return data
 
+def isDrug(data, col, city):
+    drugStopList = ['drug', 'narcotic', 'narcotics', 'drugs', 'intoxication']
+    wnl = nltk.WordNetLemmatizer()
+    lemmatize = functools.lru_cache(maxsize = 300)(wnl.lemmatize)
+    for record in data:
+        info = record[col]
+        info = info.replace("-", " ")
+        tokens = nltk.word_tokenize(info)
+        tags = nltk.pos_tag(tokens)
+        noun = [word for word, tag in tags if tag in ('NN', 'NNS', 'NNP', 'NNPS')]
+        if noun:
+            wordList = noun
+        else:
+            wordList = tokens
+
+        crime = [lemmatize(word.lower()) for word in wordList]
+        record["isDrug"] = ((True in [word in drugStopList for word in crime]))
+    return data
+
 
 def dayOrNight(data, col):
     form = '%H:%M:%S.%f'
