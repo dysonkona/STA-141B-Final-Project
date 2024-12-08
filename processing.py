@@ -6,9 +6,12 @@ import pandas as pd
 import functools
 import random
 
+# helper function to execute subprocesses
 def subProcess(data, operations, metadata):
+    # pair functions and arguments together
     for operation, args in zip(operations, metadata):
         if args is not None:
+            #Unpack args if necessary
             if type(args) == list:
                 data = operation(data, *args)
             else:
@@ -17,6 +20,7 @@ def subProcess(data, operations, metadata):
             data = operation(data)
     return data
 
+#Validate and fill missing data 
 def validateFill(data, city):
     """
     Ensure that all required columns are present in a list of dictionaries.
@@ -44,10 +48,12 @@ def validateFill(data, city):
             filtered_data.append(record)
     return filtered_data
 
+#Pagination, allows for data parallelism within a specific station query
 def Pagination(task, query, fetch_function, maxRecords = None, user = None, password = None):
     """Fetch all pages of data for a given query."""
     all_data = []
     tp = []
+    #scenario for crime APIs
     if task == 'crime':
         limit = query[4]  # Assuming 'limit' is the 5th element in the query
         offset = query[5]  # Assuming 'offset' is the 6th element in the query
@@ -68,15 +74,18 @@ def Pagination(task, query, fetch_function, maxRecords = None, user = None, pass
             tp.append((e-s, len(page_data)))
             offset += limit
             #print("time for batch:", str(tp))
+    #Scenario for yelp reviews
     elif task == 'review':
         all_data = []
         tp = []
+        #initial condition
         if query[1] == True:
             s= time.time()
             visitList = fetch_function(*query)
             query[1] = False
             e = time.time()
             tp.append((e-s, len(visitList)))
+        #for all links found
         while visitList: #or toVisit
             s = time.time()
             query[0] = visitList[0]
@@ -88,10 +97,11 @@ def Pagination(task, query, fetch_function, maxRecords = None, user = None, pass
             tp.append((e-s, len(page_data)))
     return all_data, tp
 
-
+#Parallel processor for specific data source
 def parallelProcess(workers, function, params, task, 
                     nested = True, maxRecords = None, subprocess = None, metadata = None, *args):
     throughput = []
+    #Internal function to fetch an individual query with or without pagination
     def fetchQuery(query):
         if nested:
             if task == 'crime':
@@ -105,18 +115,21 @@ def parallelProcess(workers, function, params, task,
             through = e-s
         throughput.append(through)
         return data
-    
+    #Helper function to process all 
     def processAll(args):
         """Process all paginated data for a station."""
         
         query, meta = args
         data = fetchQuery(query)  # Fetch all pages or data
+        #Run subprocesses through pipeline if present
         if subprocess:
             return subProcess(data, subprocess, meta)
         return data
     
     startTime = time.time()
+    #Actual parallel execution
     with ThreadPoolExecutor(max_workers = workers) as executor:
+        #handle metadata edge case 
         if metadata == None:
             metadata = [None] * len(params)
             pairedArgs = zip(params, metadata)
@@ -134,6 +147,7 @@ def parallelProcess(workers, function, params, task,
         endTime = time.time()
         final = endTime - startTime
         print("Time taken to process (seconds):", str(final))
+        #unpack data into dataframe appropriately, return tracked throughput and total processing time
         if task == 'crime':
             flattened = [value for sublist in results for value in sublist]
             return pd.DataFrame(flattened), throughput, final
@@ -142,10 +156,13 @@ def parallelProcess(workers, function, params, task,
         # if task == 'other':
         #     return results, throughput, final
 
+#Used to process multiple data sources
 def multiParallelProcess(workers, functions):
     results = []
+    #helper function
     def internal(func, params):
         return func(*params)
+    #Parallel execution using internal 
     with ThreadPoolExecutor(max_workers = workers) as executor:
         futures = [
             executor.submit(internal, function[0], function[1]) for function in functions

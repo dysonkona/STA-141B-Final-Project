@@ -11,7 +11,7 @@ import lxml.html as lx
 import re
 from selenium import webdriver
 
-
+#Load station data through legacy BART API
 def stationLoad(cities):
     url = "https://api.bart.gov/api/stn.aspx"  
     key = "Z2XJ-5YDK-9AKT-DWEI"
@@ -42,9 +42,12 @@ def stationLoad(cities):
 
     return df
 
+#Load crime data through SF and OAK openData portal
 def loadCrime(city, coordinates, radius, startYear, limit, offset, user, password):
     lat, long = coordinates
+    #Convert radius to meters
     meters = 1609.34 * radius
+    #SF parameters
     if city == "SF":
         params = {
             "$select":"incident_datetime, incident_category, point",
@@ -55,7 +58,7 @@ def loadCrime(city, coordinates, radius, startYear, limit, offset, user, passwor
             
         }
         url = 'https://data.sfgov.org/resource/wg3w-h783.json'
-
+    #Oak parameters
     elif city == "OAK":
         params = {
             "$select":"datetime, description, location",
@@ -66,6 +69,7 @@ def loadCrime(city, coordinates, radius, startYear, limit, offset, user, passwor
         }
         url = 'https://data.oaklandca.gov/resource/ppgh-7dqv.json'
 
+    #Request
     response = requests.get(url, auth = (user, password), params = params)
     time.sleep(random.uniform(2,5))
     if response.status_code == 200:
@@ -74,6 +78,7 @@ def loadCrime(city, coordinates, radius, startYear, limit, offset, user, passwor
         print("Authentication failed:", response.status_code)
         return None
 
+#Helper function to get all subpages for a BART yelp page
 def GetPages(url):
     links_to_visit = [url]  # Initialize with the parent URL
     processed_links = set()  # Track links that have already been processed
